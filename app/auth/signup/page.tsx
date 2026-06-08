@@ -18,6 +18,7 @@ export default function SignupPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const { register, handleSubmit, formState } = useForm<SignupForm>({ resolver: zodResolver(signupSchema) });
 
   async function onSubmit(values: SignupForm) {
@@ -28,6 +29,7 @@ export default function SignupPage() {
       email: values.email,
       password: values.password,
       options: {
+        emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
         data: {
           name: values.name,
           phone: values.phone,
@@ -43,12 +45,42 @@ export default function SignupPage() {
       return;
     }
 
+    // A session means email confirmation is disabled — the user is already signed in.
     if (data.session) {
       router.push('/verify-funds');
       return;
     }
 
-    router.push('/verify-funds');
+    // No session => Supabase sent a confirmation email. Tell the user to check it.
+    setSentTo(values.email);
+    setLoading(false);
+  }
+
+  if (sentTo) {
+    return (
+      <section className="mx-auto max-w-xl rounded-[2rem] border border-slate-200 bg-white p-10 text-center shadow-soft">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-royal-50 text-2xl">📬</div>
+        <h1 className="mt-5 text-3xl font-semibold text-slate-900">Check your email</h1>
+        <p className="mt-3 text-slate-600">
+          We sent a confirmation link to <span className="font-semibold text-slate-900">{sentTo}</span>.
+          Click it to activate your account, then sign in to continue your application.
+        </p>
+        <p className="mt-2 text-sm text-slate-500">
+          Can&apos;t find it? Check your spam folder, or wait a minute and look again.
+        </p>
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <Link href="/auth/login" className="inline-flex rounded-full bg-royal-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-royal-600">
+            Go to sign in
+          </Link>
+          <button
+            onClick={() => { setSentTo(null); setError(null); }}
+            className="text-sm font-semibold text-royal-700 hover:text-royal-800"
+          >
+            Use a different email
+          </button>
+        </div>
+      </section>
+    );
   }
 
   return (

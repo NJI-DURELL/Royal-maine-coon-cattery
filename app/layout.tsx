@@ -46,10 +46,8 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
     googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 }
-  },
-  icons: {
-    icon: '/favicon.ico'
   }
+  // Favicon is provided by app/icon.svg (Next.js file-based metadata convention).
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

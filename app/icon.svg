@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Royal Maine Coon Cattery">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e4b573"/>
+      <stop offset="1" stop-color="#d4af37"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="64" height="64" rx="15" fill="#0f172a"/>
+
+  <!-- Crown -->
+  <path d="M21 23 L21 13 L27 17 L32 9 L37 17 L43 13 L43 23 Z" fill="url(#gold)"/>
+  <circle cx="21" cy="12" r="1.6" fill="#fef3c7"/>
+  <circle cx="32" cy="8" r="1.8" fill="#fef3c7"/>
+  <circle cx="43" cy="12" r="1.6" fill="#fef3c7"/>
+
+  <!-- Tufted Maine Coon ears -->
+  <path d="M17 44 L19 25 L31 36 Z" fill="url(#gold)"/>
+  <path d="M47 44 L45 25 L33 36 Z" fill="url(#gold)"/>
+  <path d="M19 25 L18.5 20 L21 24 Z" fill="url(#gold)"/>
+  <path d="M45 25 L45.5 20 L43 24 Z" fill="url(#gold)"/>
+
+  <!-- Head -->
+  <ellipse cx="32" cy="43" rx="14.5" ry="13" fill="url(#gold)"/>
+
+  <!-- Eyes -->
+  <ellipse cx="26" cy="42" rx="2.3" ry="3" fill="#0f172a"/>
+  <ellipse cx="38" cy="42" rx="2.3" ry="3" fill="#0f172a"/>
+
+  <!-- Nose -->
+  <path d="M30 48 L34 48 L32 51 Z" fill="#0f172a"/>
+
+  <!-- Whiskers -->
+  <g stroke="#0f172a" stroke-width="1.1" stroke-linecap="round">
+    <line x1="24" y1="49" x2="16" y2="48"/>
+    <line x1="24" y1="51" x2="17" y2="52"/>
+    <line x1="40" y1="49" x2="48" y2="48"/>
+    <line x1="40" y1="51" x2="47" y2="52"/>
+  </g>
+</svg>
