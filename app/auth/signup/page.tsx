@@ -25,35 +25,44 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
 
-    const { data, error: authError } = await supabase.auth.signUp({
-      email: values.email,
-      password: values.password,
-      options: {
-        emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
-        data: {
-          name: values.name,
-          phone: values.phone,
-          location: values.location,
-          country: values.country
+    try {
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
+          data: {
+            name: values.name,
+            phone: values.phone,
+            location: values.location,
+            country: values.country
+          }
         }
+      });
+
+      if (authError) {
+        // Surfaced when the mail provider (custom SMTP) can't send the confirmation email.
+        const friendly = /sending confirmation email/i.test(authError.message)
+          ? "We couldn't send your confirmation email right now. Please try again shortly, or contact us if it keeps happening."
+          : authError.message;
+        setError(friendly);
+        setLoading(false);
+        return;
       }
-    });
 
-    if (authError) {
-      setError(authError.message);
+      // A session means email confirmation is disabled — the user is already signed in.
+      if (data.session) {
+        router.push('/verify-funds');
+        return;
+      }
+
+      // No session => Supabase sent a confirmation email. Tell the user to check it.
+      setSentTo(values.email);
       setLoading(false);
-      return;
+    } catch {
+      setError("We couldn't reach the server. Check your connection and try again.");
+      setLoading(false);
     }
-
-    // A session means email confirmation is disabled — the user is already signed in.
-    if (data.session) {
-      router.push('/verify-funds');
-      return;
-    }
-
-    // No session => Supabase sent a confirmation email. Tell the user to check it.
-    setSentTo(values.email);
-    setLoading(false);
   }
 
   if (sentTo) {
