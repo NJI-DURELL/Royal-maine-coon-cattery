@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String    @id @default(uuid())
+  email                 String    @unique
+  passwordHash          String
+  name                  String
+  phone                 String?
+  location              String?
+  country               String?
+  profileImageUrl       String?
+  role                  Role      @default(USER)
+  accountStatus         AccountStatus @default(ACTIVE)
+  freezeDate            DateTime?
+  freezeReason          String?
+  referralCode          String?   @unique
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  buyer                 Buyer?
+  sessions              Session[]
+  referralsMade         Referral[] @relation("ReferralsMade")
+  referralReceived      Referral?  @relation("ReferralReceived")
+
+  @@index([email])
+  @@index([role])
+  @@index([accountStatus])
+  @@index([referralCode])
+}
+
+model Referral {
+  id              String         @id @default(uuid())
+  referrerId      String
+  referrer        User           @relation("ReferralsMade", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUserId  String?        @unique
+  referredUser    User?          @relation("ReferralReceived", fields: [referredUserId], references: [id], onDelete: SetNull)
+  referredEmail   String?
+  status          ReferralStatus @default(PENDING)
+  rewardAmount    Float?
+  rewardNote      String?
+  qualifiedAt     DateTime?
+  rewardedAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([referrerId])
+  @@index([status])
+}
+
+enum ReferralStatus {
+  PENDING    // referred friend applied — not yet qualified
+  QUALIFIED  // referred friend verified — reward earned
+  REWARDED   // reward issued to the referrer
+  CANCELLED
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  FROZEN
+}
+model Buyer {
+  id                    String    @id @default(uuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proofUrl              String?   // S3 URL for bank statement
+  proofDescription      String?   // Alternative proof text
+  proofAmount           Float?    // Amount available
+  proofStatus           ProofStatus @default(PENDING)
+  rejectionReason       String?
+  verifiedAt            DateTime?
+  transportationPlan    TransportationPlan?
+  deliveryLocation      String?
+  hasVet                Boolean   @default(false)
+  monthlyBudget         Float?
+  housingSituation      String?
+  familyApproval        Boolean   @default(false)
+  agreementVideoCall    Boolean   @default(false)
+  agreementDeposit      Boolean   @default(false)
+  agreementTerms        Boolean   @default(false)
+  videoCallScheduled    DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  kittensInterested     String[]  // Array of kitten IDs
+  reservations          Reservation[]
+  
+  @@index([proofStatus])
+  @@index([userId])
+}
+
+enum ProofStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TransportationPlan {
+  NANNY
+  PICKUP
+}
+
+model Kitten {
+  id          String   @id @default(uuid())
+  name        String
+  color       String
+  ageWeeks    Int
+  price       Float
+  gender      String
+  description String?
+  mainImageUrl String
+  galleryImages String[] // Array of image URLs
+  pedigree    String?   // PDF URL or text description
+  healthTests String?   // Vaccination, microchipping, genetic tests
+  status      Status    @default(AVAILABLE)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  reservations Reservation[]
+  
+  @@index([status])
+  @@index([color])
+  @@index([gender])
+  @@index([price])
+}
+
+enum Status {
+  AVAILABLE
+  RESERVED
+  SOLD
+}
+
+model Reservation {
+  id        String   @id @default(uuid())
+  kittenId  String
+  buyerId   String
+  deposit   Float?
+  status    ReservationStatus @default(PENDING)
+  createdAt DateTime  @default(now())
+  
+  kitten Kitten  @relation(fields: [kittenId], references: [id], onDelete: Cascade)
+  buyer  Buyer  @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  
+  @@unique([kittenId, buyerId])
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  
+  @@index([userId])
+  @@index([token])
+}
