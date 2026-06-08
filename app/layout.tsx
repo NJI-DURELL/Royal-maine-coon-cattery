@@ -39,15 +39,15 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     url: siteConfig.url,
     siteName: siteConfig.name,
-    images: [{ url: siteConfig.ogImage, width: 1200, height: 630, alt: siteConfig.name }],
     type: 'website',
     locale: 'en_US'
+    // og:image is provided by app/opengraph-image.tsx (file-based metadata)
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Royal Maine Coon Cattery | Purebred, Health-Tested Kittens',
-    description: siteConfig.description,
-    images: [siteConfig.ogImage]
+    description: siteConfig.description
+    // twitter:image is provided by app/twitter-image.tsx
   },
   robots: {
     index: true,

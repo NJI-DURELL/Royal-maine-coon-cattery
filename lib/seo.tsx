@@ -1,13 +1,22 @@
 import type { Kitten } from '@prisma/client';
 
+// Resolve the canonical site URL. Prefer an explicit env var; otherwise fall back
+// to Vercel's production domain so canonicals/sitemap/OG are never "localhost" in
+// production even if NEXT_PUBLIC_SITE_URL is forgotten.
+const resolveSiteUrl = () => {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '');
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  return 'http://localhost:3000';
+};
+
 export const siteConfig = {
   name: 'Royal Maine Coon Cattery',
   shortName: 'Royal Maine Coon',
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+  url: resolveSiteUrl(),
   description:
     'Licensed Maine Coon cattery raising purebred, health-tested kittens. Pedigree documentation, vaccinations, and microchipping included. Apply to adopt and schedule a private video viewing.',
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'hello@royalmainecoon.com',
-  ogImage: '/og-cover.jpg'
+  ogImage: '/opengraph-image'
 } as const;
 
 export const absoluteUrl = (path = '') => `${siteConfig.url}${path}`;

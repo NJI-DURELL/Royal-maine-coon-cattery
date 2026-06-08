@@ -7,7 +7,10 @@ export const revalidate = 3600; // refresh hourly
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: siteConfig.url, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
-    { url: `${siteConfig.url}/kittens`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 }
+    { url: `${siteConfig.url}/kittens`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
+    { url: `${siteConfig.url}/contact`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.4 },
+    { url: `${siteConfig.url}/privacy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${siteConfig.url}/terms`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 }
   ];
 
   let kittenRoutes: MetadataRoute.Sitemap = [];
