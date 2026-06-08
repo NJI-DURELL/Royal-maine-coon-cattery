@@ -17,12 +17,39 @@ import Link from 'next/link';
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [needsConfirm, setNeedsConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { register, handleSubmit, formState } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+  const [resending, setResending] = useState(false);
+  const { register, handleSubmit, getValues, formState } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+
+  async function resendConfirmation() {
+    const email = getValues('email');
+    if (!email) {
+      setError('Enter your email above first, then resend.');
+      return;
+    }
+    setResending(true);
+    setError(null);
+    const { error: resendError } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
+    });
+    setResending(false);
+    if (resendError) {
+      setError(resendError.message);
+      return;
+    }
+    setNeedsConfirm(false);
+    setInfo(`Confirmation email re-sent to ${email}. Check your inbox (and spam).`);
+  }
 
   async function onSubmit(values: LoginForm) {
     setLoading(true);
     setError(null);
+    setInfo(null);
+    setNeedsConfirm(false);
 
     const { error: authError } = await supabase.auth.signInWithPassword({
       email: values.email,
@@ -31,6 +58,11 @@ export default function LoginPage() {
 
     if (authError) {
       setError(authError.message);
+      // Supabase returns code "email_not_confirmed" when the account exists but
+      // the email link was never clicked — offer to resend it.
+      if (authError.code === 'email_not_confirmed' || /not confirmed/i.test(authError.message)) {
+        setNeedsConfirm(true);
+      }
       setLoading(false);
       return;
     }
@@ -58,6 +90,20 @@ export default function LoginPage() {
       <p className="mt-3 text-slate-600">Access your verification dashboard, review kitten interests, and schedule your video adoption call.</p>
       <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
         {error ? <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
+        {info ? <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{info}</p> : null}
+        {needsConfirm ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <p>Your email isn&apos;t confirmed yet. Didn&apos;t get the link or did it expire?</p>
+            <button
+              type="button"
+              onClick={resendConfirmation}
+              disabled={resending}
+              className="mt-2 inline-flex items-center rounded-full bg-royal-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-royal-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {resending ? 'Sending…' : 'Resend confirmation email'}
+            </button>
+          </div>
+        ) : null}
         <div>
           <Label htmlFor="email">Email</Label>
           <Input id="email" type="email" {...register('email')} />
