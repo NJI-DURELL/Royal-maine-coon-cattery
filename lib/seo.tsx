@@ -15,8 +15,12 @@ export const siteConfig = {
   url: resolveSiteUrl(),
   description:
     'Licensed Maine Coon cattery raising purebred, health-tested kittens. Pedigree documentation, vaccinations, and microchipping included. Apply to adopt and schedule a private video viewing.',
-  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'hello@royalmainecoon.com',
-  ogImage: '/opengraph-image'
+  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'royal.maine.coon.catt@gmail.com',
+  ogImage: '/opengraph-image',
+  socials: {
+    facebook: 'https://www.facebook.com/profile.php?id=61578433262779',
+    tiktok: 'https://tiktok.com/@royal.maine.catt'
+  }
 } as const;
 
 export const absoluteUrl = (path = '') => `${siteConfig.url}${path}`;
@@ -36,6 +40,8 @@ export const organizationSchema = () => ({
   email: siteConfig.email,
   image: absoluteUrl(siteConfig.ogImage),
   logo: absoluteUrl('/favicon.ico'),
+  // Links the brand entity to its official profiles (helps Google's knowledge panel).
+  sameAs: Object.values(siteConfig.socials),
   knowsAbout: ['Maine Coon cats', 'Purebred kitten breeding', 'Cat pedigree', 'Feline health testing']
 });
 
