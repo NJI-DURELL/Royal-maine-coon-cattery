@@ -26,39 +26,33 @@ export default function SignupPage() {
     setError(null);
 
     try {
-      const { data, error: authError } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
-        options: {
-          emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
-          data: {
-            name: values.name,
-            phone: values.phone,
-            location: values.location,
-            country: values.country
-          }
-        }
+      // Create the account server-side (email pre-confirmed, no confirmation email).
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values)
       });
+      const data = await res.json().catch(() => ({}));
 
-      if (authError) {
-        // Surfaced when the mail provider (custom SMTP) can't send the confirmation email.
-        const friendly = /sending confirmation email/i.test(authError.message)
-          ? "We couldn't send your confirmation email right now. Please try again shortly, or contact us if it keeps happening."
-          : authError.message;
-        setError(friendly);
+      if (!res.ok) {
+        setError(data.error || 'Could not create your account. Please try again.');
         setLoading(false);
         return;
       }
 
-      // A session means email confirmation is disabled — the user is already signed in.
-      if (data.session) {
-        router.push('/verify-funds');
+      // Account is ready — sign in to establish a session, then continue.
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password
+      });
+
+      if (signInError) {
+        // Account exists but auto sign-in failed — send them to the login page.
+        router.push('/auth/login');
         return;
       }
 
-      // No session => Supabase sent a confirmation email. Tell the user to check it.
-      setSentTo(values.email);
-      setLoading(false);
+      router.push('/verify-funds');
     } catch {
       setError("We couldn't reach the server. Check your connection and try again.");
       setLoading(false);
