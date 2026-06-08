@@ -1,14 +1,24 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
+import { presignProofView } from '@/lib/storage';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { VerificationActions } from '@/components/admin/VerificationActions';
 
 export const dynamic = 'force-dynamic';
 
+type PendingBuyer = {
+  id: string;
+  kittensInterested: string[];
+  proofAmount: number | null;
+  proofDescription: string | null;
+  proofViewUrl: string | null;
+  user: { name: string | null; email: string; phone: string | null };
+};
+
 const getAdminData = async () => {
   try {
-    const [kittenCounts, buyerCounts, pendingBuyers] = await Promise.all([
+    const [kittenCounts, buyerCounts, rawPending] = await Promise.all([
       prisma.kitten.groupBy({ by: ['status'], _count: { status: true } }),
       prisma.buyer.groupBy({ by: ['proofStatus'], _count: { proofStatus: true } }),
       prisma.buyer.findMany({
@@ -19,12 +29,24 @@ const getAdminData = async () => {
       })
     ]);
 
+    // Sign a short-lived view URL for each uploaded proof document (files are private).
+    const pendingBuyers: PendingBuyer[] = await Promise.all(
+      rawPending.map(async (b) => ({
+        id: b.id,
+        kittensInterested: b.kittensInterested,
+        proofAmount: b.proofAmount,
+        proofDescription: b.proofDescription,
+        proofViewUrl: b.proofUrl ? await presignProofView(b.proofUrl) : null,
+        user: { name: b.user.name, email: b.user.email, phone: b.user.phone }
+      }))
+    );
+
     return { kittenCounts, buyerCounts, pendingBuyers };
   } catch {
     return {
       kittenCounts: [] as Array<{ status: string; _count: { status: number } }>,
       buyerCounts: [] as Array<{ proofStatus: string; _count: { proofStatus: number } }>,
-      pendingBuyers: [] as Array<{ id: string; kittensInterested: string[]; user: { name: string | null; email: string; phone: string | null } }>
+      pendingBuyers: [] as PendingBuyer[]
     };
   }
 };
@@ -113,7 +135,31 @@ export default async function AdminPage() {
                 <div>
                   <p className="font-semibold text-slate-900">{buyer.user.name ?? buyer.user.email}</p>
                   <p className="text-sm text-slate-600">{buyer.user.email} · {buyer.user.phone ?? 'No phone'}</p>
-                  <p className="mt-2 text-sm text-slate-600">Interested kittens: {buyer.kittensInterested.join(', ')}</p>
+                  {buyer.proofAmount != null ? (
+                    <p className="mt-2 text-sm text-slate-700">Funds declared: <span className="font-semibold">${buyer.proofAmount.toLocaleString()}</span></p>
+                  ) : null}
+                  {buyer.proofDescription ? (
+                    <p className="mt-1 text-sm text-slate-600">Note: {buyer.proofDescription}</p>
+                  ) : null}
+                  <p className="mt-1 text-sm text-slate-500">Interested kittens: {buyer.kittensInterested.join(', ') || '—'}</p>
+
+                  {/* Proof document — crosscheck before deciding */}
+                  <div className="mt-3">
+                    {buyer.proofViewUrl ? (
+                      <a
+                        href={buyer.proofViewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-full border border-royal-300 bg-white px-4 py-2 text-sm font-semibold text-royal-700 transition hover:border-royal-500 hover:text-royal-800"
+                      >
+                        📄 View proof document
+                      </a>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                        {buyer.proofDescription ? 'No file — text proof only' : 'No proof document uploaded'}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <VerificationActions buyerId={buyer.id} />
               </div>
