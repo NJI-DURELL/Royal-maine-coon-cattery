@@ -29,7 +29,6 @@ export async function POST(request: Request) {
     // Kitten photos are shown publicly on the storefront; proof-of-funds stays private.
     const isKittenImage = folder === 'kittens';
     const prefix = isKittenImage ? 'kittens' : 'proof-of-funds';
-    const acl = isKittenImage ? 'public-read' : 'private';
     const safeName = String(fileName).replace(/[^a-zA-Z0-9._-]/g, '_');
 
     const s3 = new S3Client({
@@ -37,12 +36,15 @@ export async function POST(request: Request) {
       credentials: { accessKeyId, secretAccessKey }
     });
 
+    // No object ACL is set, so this works on buckets with ACLs disabled (Object
+    // Ownership = "Bucket owner enforced", the modern S3 default). Public access to
+    // kitten images is granted by a bucket policy on the `kittens/` prefix; the
+    // `proof-of-funds/` prefix has no public policy, so those objects stay private.
     const key = `${prefix}/${Date.now()}-${safeName}`;
     const command = new PutObjectCommand({
       Bucket: bucket,
       Key: key,
-      ContentType: resolvedContentType,
-      ACL: acl
+      ContentType: resolvedContentType
     });
     const url = await getSignedUrl(s3, command, { expiresIn: 900 });
     const publicUrl = `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
