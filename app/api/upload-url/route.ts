@@ -15,24 +15,31 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { fileName, contentType } = body;
+  const { fileName, contentType, folder } = body;
 
   if (!fileName || !contentType) {
     return NextResponse.json({ error: 'Missing fileName or contentType' }, { status: 400 });
   }
+
+  // Kitten photos are shown publicly on the storefront; proof-of-funds stays private.
+  const isKittenImage = folder === 'kittens';
+  const prefix = isKittenImage ? 'kittens' : 'proof-of-funds';
+  const acl = isKittenImage ? 'public-read' : 'private';
+  const safeName = String(fileName).replace(/[^a-zA-Z0-9._-]/g, '_');
 
   const s3 = new S3Client({
     region,
     credentials: { accessKeyId, secretAccessKey }
   });
 
-  const key = `proof-of-funds/${Date.now()}-${fileName}`;
+  const key = `${prefix}/${Date.now()}-${safeName}`;
   const command = new PutObjectCommand({
     Bucket: bucket,
     Key: key,
     ContentType: contentType,
-    ACL: 'private'
+    ACL: acl
   });
   const url = await getSignedUrl(s3, command, { expiresIn: 900 });
-  return NextResponse.json({ uploadUrl: url, key, bucket });
+  const publicUrl = `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+  return NextResponse.json({ uploadUrl: url, key, bucket, publicUrl });
 }

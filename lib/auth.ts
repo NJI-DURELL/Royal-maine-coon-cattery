@@ -59,3 +59,20 @@ export async function requireAdmin() {
 
   return data.user;
 }
+
+/**
+ * Admin guard for Route Handlers (API). Returns the user if they're an admin,
+ * otherwise null — the caller returns the appropriate 401/403 JSON response.
+ * (Route handlers can't use redirect() the way pages do.)
+ */
+export async function getAdminUser() {
+  const supabase = getSupabaseServer();
+  const { data } = await supabase.auth.getUser();
+  if (!data?.user) return null;
+
+  const dbUser = await prisma.user
+    .findUnique({ where: { id: data.user.id }, select: { role: true } })
+    .catch(() => null);
+
+  return dbUser?.role === 'ADMIN' ? data.user : null;
+}

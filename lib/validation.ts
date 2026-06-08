@@ -46,3 +46,19 @@ export const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8)
 });
+
+export const kittenSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  color: z.string().min(1, 'Color is required'),
+  ageWeeks: z.coerce.number().int().min(0, 'Age must be 0 or more').max(104, 'Age looks too high'),
+  price: z.coerce.number().min(0, 'Price must be 0 or more'),
+  gender: z.enum(['Male', 'Female']),
+  description: z.string().max(2000).optional().or(z.literal('')),
+  mainImageUrl: z.string().url('A main image is required'),
+  galleryImages: z.array(z.string().url()).optional().default([]),
+  pedigree: z.string().max(2000).optional().or(z.literal('')),
+  healthTests: z.string().max(2000).optional().or(z.literal('')),
+  status: z.enum(['AVAILABLE', 'RESERVED', 'SOLD']).default('AVAILABLE')
+});
+
+export type KittenInput = z.infer<typeof kittenSchema>;

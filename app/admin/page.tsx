@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { VerificationActions } from '@/components/admin/VerificationActions';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,8 +48,12 @@ export default async function AdminPage() {
             <Link href="/admin/settings">
               <Button variant="secondary">Platform settings</Button>
             </Link>
-            <Button>Review verifications</Button>
-            <Button>Manage kittens</Button>
+            <Link href="#pending">
+              <Button variant="secondary">Review verifications</Button>
+            </Link>
+            <Link href="/admin/kittens">
+              <Button>Manage kittens</Button>
+            </Link>
           </div>
         </div>
       </div>
@@ -75,8 +80,12 @@ export default async function AdminPage() {
         <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-soft">
           <p className="text-sm uppercase tracking-[0.3em] text-royal-700">Quick actions</p>
           <div className="mt-4 space-y-3">
-            <Button className="w-full">Add new kitten</Button>
-            <Button variant="secondary" className="w-full">Freeze account</Button>
+            <Link href="/admin/kittens/new" className="block">
+              <Button className="w-full">+ Add new kitten</Button>
+            </Link>
+            <Link href="/admin/kittens" className="block">
+              <Button variant="secondary" className="w-full">Manage kittens</Button>
+            </Link>
           </div>
         </div>
         <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-soft">
@@ -92,7 +101,7 @@ export default async function AdminPage() {
         </div>
       </div>
 
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-soft">
+      <div id="pending" className="scroll-mt-24 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-soft">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-2xl font-semibold text-slate-900">Pending verifications</h2>
           <Badge variant="warning">{buyerMap.PENDING ?? 0} waiting</Badge>
@@ -106,10 +115,7 @@ export default async function AdminPage() {
                   <p className="text-sm text-slate-600">{buyer.user.email} · {buyer.user.phone ?? 'No phone'}</p>
                   <p className="mt-2 text-sm text-slate-600">Interested kittens: {buyer.kittensInterested.join(', ')}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Button variant="secondary">Approve</Button>
-                  <Button variant="danger">Reject</Button>
-                </div>
+                <VerificationActions buyerId={buyer.id} />
               </div>
             ))
           ) : (
