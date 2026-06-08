@@ -3,15 +3,7 @@ import { cookies } from 'next/headers';
 import { getSupabaseServer } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { attachReferral, REFERRAL_COOKIE } from '@/lib/referral';
-
-// TODO: Implement Resend email notifications when compatibility issues are resolved
-// const resendApiKey = process.env.RESEND_API_KEY;
-// const resendFrom = process.env.RESEND_FROM;
-// const breederEmail = process.env.BREEDER_EMAIL;
-
-// if (!resendApiKey || !resendFrom || !breederEmail) {
-//   throw new Error('Missing Resend email settings');
-// }
+import { sendBreederNotification } from '@/lib/email';
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -113,20 +105,19 @@ export async function POST(request: Request) {
     }
   }
 
-  // TODO: Enable Resend email notifications
-  // const resend = new Resend(resendApiKey);
-  // await resend.emails.send({
-  //   from: resendFrom,
-  //   to: breederEmail,
-  //   subject: 'New proof of funds submitted',
-  //   html: `<h1>New verification request</h1>
-  //     <p><strong>${fullName}</strong> has submitted proof of funds for review.</p>
-  //     <p>Email: ${email}</p>
-  //     <p>Phone: ${phone}</p>
-  //     <p>Amount available: $${proofAmount}</p>
-  //     <p>Interested kittens: ${kittenIds.join(', ')}</p>
-  //     <p>Proof document: ${proofUrl ?? 'No file uploaded'}</p>`
-  // });
+  // Notify the breeder of the new submission. Best-effort — a mail failure must
+  // never block verification, so we don't await-throw on it.
+  await sendBreederNotification({
+    fullName,
+    email: user.email ?? email,
+    phone,
+    location,
+    country,
+    proofAmount,
+    kittenIds,
+    proofUrl,
+    proofDescription
+  });
 
   return NextResponse.json({ success: true });
 }

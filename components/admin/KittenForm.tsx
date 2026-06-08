@@ -11,16 +11,30 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 
+// iPhone photos are often HEIC, which browsers can't display and which report an
+// empty MIME type. Convert them to JPEG in the browser before uploading.
+async function toUploadableImage(file: File): Promise<File> {
+  const isHeic = /image\/hei[cf]/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+  if (!isHeic) return file;
+
+  const heic2any = (await import('heic2any')).default;
+  const result = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+  const blob = Array.isArray(result) ? result[0] : result;
+  const name = file.name.replace(/\.(heic|heif)$/i, '.jpg');
+  return new File([blob], /\.jpe?g$/i.test(name) ? name : `${name}.jpg`, { type: 'image/jpeg' });
+}
+
 async function uploadKittenImage(file: File): Promise<string> {
+  const contentType = file.type || 'image/jpeg';
   const res = await fetch('/api/upload-url', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fileName: file.name, contentType: file.type, folder: 'kittens' })
+    body: JSON.stringify({ fileName: file.name, contentType, folder: 'kittens' })
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Could not get an upload URL');
 
-  const put = await fetch(data.uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
+  const put = await fetch(data.uploadUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: file });
   if (!put.ok) throw new Error('Image upload failed');
   return data.publicUrl as string;
 }
@@ -49,10 +63,11 @@ export function KittenForm() {
     setError(null);
     setUploading(true);
     try {
-      const url = await uploadKittenImage(file);
+      const prepared = await toUploadableImage(file);
+      const url = await uploadKittenImage(prepared);
       setValue('mainImageUrl', url, { shouldValidate: true });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Upload failed');
+      setError(e instanceof Error ? e.message : 'Could not process that image. Try a JPG or PNG.');
     } finally {
       setUploading(false);
     }
@@ -96,7 +111,7 @@ export function KittenForm() {
           <input
             id="mainImage"
             type="file"
-            accept="image/*"
+            accept="image/*,.heic,.heif"
             onChange={(e) => onMainImage(e.target.files?.[0])}
             className="text-sm text-slate-600 file:mr-3 file:rounded-full file:border-0 file:bg-royal-500 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-royal-600"
           />

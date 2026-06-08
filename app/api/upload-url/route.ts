@@ -17,9 +17,13 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { fileName, contentType, folder } = body;
 
-  if (!fileName || !contentType) {
-    return NextResponse.json({ error: 'Missing fileName or contentType' }, { status: 400 });
+  if (!fileName) {
+    return NextResponse.json({ error: 'Missing fileName' }, { status: 400 });
   }
+
+  // Some files (notably iPhone HEIC) report no MIME type — fall back to a default
+  // rather than rejecting the upload.
+  const resolvedContentType = contentType || 'application/octet-stream';
 
   // Kitten photos are shown publicly on the storefront; proof-of-funds stays private.
   const isKittenImage = folder === 'kittens';
@@ -36,7 +40,7 @@ export async function POST(request: Request) {
   const command = new PutObjectCommand({
     Bucket: bucket,
     Key: key,
-    ContentType: contentType,
+    ContentType: resolvedContentType,
     ACL: acl
   });
   const url = await getSignedUrl(s3, command, { expiresIn: 900 });
