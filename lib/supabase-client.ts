@@ -1,4 +1,5 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
+import { type SupabaseClient } from '@supabase/supabase-js';
 
 let client: SupabaseClient | null = null;
 
@@ -9,12 +10,9 @@ function getClient(): SupabaseClient {
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Missing Supabase environment variables');
   }
-  client = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true
-    }
-  });
+  // Cookie-based browser client: the session is stored in cookies the server can
+  // read (via getSupabaseServer), instead of localStorage which is browser-only.
+  client = createBrowserClient(supabaseUrl, supabaseAnonKey);
   return client;
 }
 
