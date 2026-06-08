@@ -21,13 +21,20 @@ const config: Config = {
           900: '#4f3f17'
         },
         midnight: '#0f172a',
-        cream: '#fef3c7'
+        cream: '#fef3c7',
+        ink: {
+          DEFAULT: '#12100c',
+          800: '#1c1813',
+          700: '#26201a'
+        }
       },
       boxShadow: {
-        soft: '0 20px 50px rgba(15, 23, 42, 0.12)'
+        soft: '0 20px 50px rgba(15, 23, 42, 0.12)',
+        gold: '0 18px 40px rgba(212, 175, 55, 0.25)'
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
+        sans: ['var(--font-inter)', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'Playfair Display', 'ui-serif', 'Georgia', 'serif']
       }
     }
   },

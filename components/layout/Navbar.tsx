@@ -23,12 +23,12 @@ export function Navbar() {
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between py-4">
         <Link
           href="/"
-          className="flex items-center gap-3 rounded-2xl text-lg font-bold text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500 focus-visible:ring-offset-2"
+          className="flex items-center gap-3 rounded-2xl text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500 focus-visible:ring-offset-2"
           onClick={() => setOpen(false)}
         >
-          <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-royal-500 text-white">RM</span>
-          <span className="hidden sm:inline">Royal Maine Coon Cattery</span>
-          <span className="sm:hidden">Royal Maine Coon</span>
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-royal-400 to-royal-600 font-display text-lg font-semibold text-ink shadow-gold">RM</span>
+          <span className="hidden font-display text-xl font-semibold tracking-tight sm:inline">Royal Maine Coon Cattery</span>
+          <span className="font-display text-xl font-semibold tracking-tight sm:hidden">Royal Maine Coon</span>
         </Link>
 
         {/* Desktop nav */}

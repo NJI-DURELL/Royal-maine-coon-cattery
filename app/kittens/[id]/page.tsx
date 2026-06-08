@@ -76,7 +76,7 @@ export default async function KittenDetailPage({ params }: { params: { id: strin
             </div>
             <div className="space-y-3">
               <Badge variant={statusVariant[kitten.status]}>{kitten.status}</Badge>
-              <h1 className="text-4xl font-semibold text-slate-900">{kitten.name}</h1>
+              <h1 className="font-display text-4xl font-semibold text-slate-900">{kitten.name}</h1>
               <p className="text-lg text-slate-600">{kitten.gender} • {kitten.color} • {kitten.ageWeeks} weeks old</p>
               <p className="text-3xl font-semibold text-royal-700">${kitten.price.toFixed(0)}</p>
             </div>
@@ -98,7 +98,7 @@ export default async function KittenDetailPage({ params }: { params: { id: strin
         </div>
         <aside className="space-y-6 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-soft">
           <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-slate-900">Interested in this kitten?</h2>
+            <h2 className="font-display text-2xl font-semibold text-slate-900">Interested in this kitten?</h2>
             <p className="text-slate-600">Complete the fund verification workflow to schedule a short live video call with the breeder.</p>
           </div>
           <Link href={`/verify-funds?kitten=${kitten.id}`} className="inline-flex w-full items-center justify-center rounded-full bg-royal-500 px-6 py-4 text-base font-semibold text-white transition hover:bg-royal-600">

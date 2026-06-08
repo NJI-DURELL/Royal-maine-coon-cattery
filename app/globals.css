@@ -56,6 +56,31 @@ img {
   color: #334155;
 }
 
+/* Gold italic serif accent word, e.g. A <span class="accent">Companion</span> */
+.accent {
+  font-family: var(--font-display), 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  color: #d4af37;
+  font-weight: 500;
+}
+
+/* Dark "silk" texture for luxury sections (keeps brand gold + midnight) */
+.bg-silk {
+  background-color: #12100c;
+  background-image:
+    radial-gradient(circle at 15% 0%, rgba(212, 175, 55, 0.16), transparent 40%),
+    radial-gradient(circle at 85% 100%, rgba(212, 175, 55, 0.10), transparent 45%),
+    linear-gradient(160deg, #1c1813 0%, #12100c 55%, #0c0a07 100%);
+}
+
+/* Vertical editorial label (e.g. "Parents", "The Cats") */
+.vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  letter-spacing: 0.35em;
+}
+
 /* Keyboard focus visibility for any element that opts in via focus-visible */
 :focus-visible {
   outline: 2px solid #d4af37;
