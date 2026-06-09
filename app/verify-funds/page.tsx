@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -11,8 +11,19 @@ import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
+import { cn } from '@/components/ui/utils';
 
 type VerifyFundsForm = z.infer<typeof verifyFundsSchema>;
+
+type SelectableKitten = {
+  id: string;
+  name: string;
+  color: string;
+  gender: string;
+  price: number;
+  mainImageUrl: string;
+  status: string;
+};
 
 export default function VerifyFundsPage() {
   return (
@@ -31,6 +42,19 @@ function VerifyFundsForm() {
   const [isSaving, setIsSaving] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofUrl, setProofUrl] = useState<string | null>(null);
+  const [availableKittens, setAvailableKittens] = useState<SelectableKitten[]>([]);
+  const [selectedKittens, setSelectedKittens] = useState<string[]>(preselectedKitten ? [preselectedKitten] : []);
+
+  // Load real kittens so buyers pick a specific one (instead of a vague dropdown).
+  useEffect(() => {
+    fetch('/api/kittens')
+      .then((r) => r.json())
+      .then((d) => setAvailableKittens(d.kittens ?? []))
+      .catch(() => {});
+  }, []);
+
+  const toggleKitten = (id: string) =>
+    setSelectedKittens((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   const form = useForm<VerifyFundsForm>({
     resolver: zodResolver(verifyFundsSchema),
@@ -55,6 +79,12 @@ function VerifyFundsForm() {
       agreementTerms: false
     }
   });
+
+  // Keep the form's kittenIds in sync with the visual picker.
+  useEffect(() => {
+    form.setValue('kittenIds', selectedKittens, { shouldValidate: form.formState.isSubmitted });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKittens]);
 
   async function handleUpload(file: File) {
     const response = await fetch('/api/upload-url', {
@@ -150,7 +180,7 @@ function VerifyFundsForm() {
             <div>
               <Label htmlFor="phone">Phone Number</Label>
               <Input id="phone" type="tel" placeholder="+1 (555) 123-4567" {...form.register('phone')} />
-              <p className="mt-1 text-xs text-slate-500">Include your country code.</p>
+              <p className="mt-1 text-xs text-slate-500">Include your country code (e.g. +1 for the US). We use it to coordinate your video call and delivery.</p>
               <p className="mt-1 text-xs text-red-600">{form.formState.errors.phone?.message}</p>
             </div>
             <div>
@@ -170,11 +200,73 @@ function VerifyFundsForm() {
           <h2 className="text-xl font-semibold text-slate-900">Kitten Interest</h2>
           <div className="mt-6 grid gap-6">
             <div>
-              <Label htmlFor="kittenIds">Which kitten(s) are you interested in?</Label>
-              <select id="kittenIds" multiple className="min-h-[110px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-royal-500 focus:ring-2 focus:ring-royal-100" {...form.register('kittenIds')}>
-                {preselectedKitten ? <option value={preselectedKitten}>Selected kitten</option> : <option value="standard">General kitten interest</option>}
-              </select>
-              <p className="mt-1 text-xs text-red-600">{form.formState.errors.kittenIds?.message}</p>
+              <Label>Which kitten(s) do you want to adopt?</Label>
+              <p className="mt-1 text-xs text-slate-500">
+                Tap to select one or more. Don&apos;t see the one you want? Choose &ldquo;General interest&rdquo; to join the waitlist.
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {availableKittens.map((k) => {
+                  const selected = selectedKittens.includes(k.id);
+                  return (
+                    <button
+                      type="button"
+                      key={k.id}
+                      onClick={() => toggleKitten(k.id)}
+                      aria-pressed={selected}
+                      className={cn(
+                        'flex items-center gap-3 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500',
+                        selected ? 'border-royal-500 bg-royal-50 ring-2 ring-royal-200' : 'border-slate-200 bg-white hover:border-royal-300'
+                      )}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={k.mainImageUrl} alt={k.name} className="h-14 w-14 flex-shrink-0 rounded-xl object-cover" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold text-slate-900">{k.name}</p>
+                        <p className="truncate text-xs text-slate-500">
+                          {k.gender} · {k.color} · ${k.price.toFixed(0)}
+                          {k.status === 'RESERVED' ? ' · Reserved' : ''}
+                        </p>
+                      </div>
+                      <span
+                        className={cn(
+                          'flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border text-xs',
+                          selected ? 'border-royal-500 bg-royal-500 text-white' : 'border-slate-300 text-transparent'
+                        )}
+                        aria-hidden="true"
+                      >
+                        ✓
+                      </span>
+                    </button>
+                  );
+                })}
+
+                {/* Always-available waitlist option */}
+                <button
+                  type="button"
+                  onClick={() => toggleKitten('general')}
+                  aria-pressed={selectedKittens.includes('general')}
+                  className={cn(
+                    'flex items-center gap-3 rounded-2xl border border-dashed p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500',
+                    selectedKittens.includes('general') ? 'border-royal-500 bg-royal-50 ring-2 ring-royal-200' : 'border-slate-300 bg-white hover:border-royal-400'
+                  )}
+                >
+                  <span className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-2xl">🐾</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-slate-900">General interest</p>
+                    <p className="text-xs text-slate-500">Notify me about upcoming kittens</p>
+                  </div>
+                  <span
+                    className={cn(
+                      'flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border text-xs',
+                      selectedKittens.includes('general') ? 'border-royal-500 bg-royal-500 text-white' : 'border-slate-300 text-transparent'
+                    )}
+                    aria-hidden="true"
+                  >
+                    ✓
+                  </span>
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-red-600">{form.formState.errors.kittenIds?.message}</p>
             </div>
             <div>
               <Label htmlFor="proofDescription">Funding note (optional)</Label>
@@ -255,8 +347,9 @@ function VerifyFundsForm() {
             <div className="md:col-span-2">
               <label className="flex items-center gap-3 text-sm font-medium text-slate-800">
                 <input type="checkbox" {...form.register('familyApproval')} className="h-4 w-4 rounded border-slate-300 text-royal-500 focus:ring-royal-500" />
-                All family members/household agree to this adoption
+                Everyone in my household agrees to this adoption
               </label>
+              <p className="mt-1 text-xs text-slate-500">A Maine Coon is a 12–15 year commitment, so we ask that all household members are on board.</p>
               <p className="mt-1 text-xs text-red-600">{form.formState.errors.familyApproval?.message}</p>
             </div>
           </div>
