@@ -4,8 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 import { cn } from '@/components/ui/utils';
+import { UserMenu } from '@/components/layout/UserMenu';
 
 const links = [
   { href: '/kittens', label: 'Kittens' },
@@ -31,37 +31,39 @@ export function Navbar() {
           <span className="font-display text-xl font-semibold tracking-tight sm:hidden">Royal Maine Coon</span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-4 md:flex" aria-label="Primary">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              aria-current={isActive(link.href) ? 'page' : undefined}
-              className={cn(
-                'rounded-full px-2 py-1 text-sm font-medium transition hover:text-royal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500',
-                isActive(link.href) ? 'text-royal-700' : 'text-slate-700'
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
-          <Link href="/auth/login">
-            <Button variant="secondary">Sign In</Button>
-          </Link>
-        </nav>
+        <div className="flex items-center gap-3">
+          {/* Desktop nav */}
+          <nav className="hidden items-center gap-4 md:flex" aria-label="Primary">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={isActive(link.href) ? 'page' : undefined}
+                className={cn(
+                  'rounded-full px-2 py-1 text-sm font-medium transition hover:text-royal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500',
+                  isActive(link.href) ? 'text-royal-700' : 'text-slate-700'
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
 
-        {/* Mobile menu toggle */}
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-controls="mobile-nav"
-          aria-label={open ? 'Close menu' : 'Open menu'}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 transition hover:border-royal-500 hover:text-royal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500 md:hidden"
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+          {/* Account avatar / sign in — visible on all sizes */}
+          <UserMenu />
+
+          {/* Mobile menu toggle */}
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-controls="mobile-nav"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 transition hover:border-royal-500 hover:text-royal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500 md:hidden"
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile drawer */}
@@ -88,13 +90,6 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link
-            href="/auth/login"
-            onClick={() => setOpen(false)}
-            className="mt-1 rounded-full bg-royal-500 px-4 py-3 text-center text-base font-semibold text-white transition hover:bg-royal-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-royal-500"
-          >
-            Sign In
-          </Link>
         </div>
       </nav>
     </header>
