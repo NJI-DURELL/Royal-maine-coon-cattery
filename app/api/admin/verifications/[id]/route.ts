@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAdminUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { sendRejectionEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,19 +26,29 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 
   const isApprove = parsed.data.action === 'APPROVE';
+  const reason = parsed.data.reason ?? 'Not specified';
+
   const buyer = await prisma.buyer
     .update({
       where: { id: params.id },
       data: {
         proofStatus: isApprove ? 'APPROVED' : 'REJECTED',
         verifiedAt: isApprove ? new Date() : null,
-        rejectionReason: isApprove ? null : parsed.data.reason ?? 'Not specified'
-      }
+        rejectionReason: isApprove ? null : reason
+      },
+      include: { user: { select: { email: true, name: true } } }
     })
     .catch(() => null);
 
   if (!buyer) {
     return NextResponse.json({ error: 'Verification not found' }, { status: 404 });
   }
+
+  // Notify the buyer of a rejection with the reason. Best-effort — a mail failure
+  // must never block the rejection from being recorded.
+  if (!isApprove && buyer.user?.email) {
+    await sendRejectionEmail({ to: buyer.user.email, name: buyer.user.name, reason });
+  }
+
   return NextResponse.json({ buyer });
 }
