@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { cn } from '@/components/ui/utils';
+import { supabase } from '@/lib/supabase-client';
 
 type VerifyFundsForm = z.infer<typeof verifyFundsSchema>;
 
@@ -44,6 +45,11 @@ function VerifyFundsForm() {
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [availableKittens, setAvailableKittens] = useState<SelectableKitten[]>([]);
   const [selectedKittens, setSelectedKittens] = useState<string[]>(preselectedKitten ? [preselectedKitten] : []);
+  // Housing answers (composed into the housingSituation field for the breeder).
+  const [homeOwnership, setHomeOwnership] = useState('');
+  const [kittenEnvironment, setKittenEnvironment] = useState('');
+  const [otherPets, setOtherPets] = useState('');
+  const [housingExtra, setHousingExtra] = useState('');
 
   // Load real kittens so buyers pick a specific one (instead of a vague dropdown).
   useEffect(() => {
@@ -86,6 +92,29 @@ function VerifyFundsForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedKittens]);
 
+  // Pre-fill name + email from the signed-in account (only if still empty).
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (!u) return;
+      const name = (u.user_metadata?.name as string) ?? '';
+      if (name && !form.getValues('fullName')) form.setValue('fullName', name);
+      if (u.email && !form.getValues('email')) form.setValue('email', u.email);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Compose the three housing answers into the housingSituation field.
+  useEffect(() => {
+    const parts: string[] = [];
+    if (homeOwnership) parts.push(`Home: ${homeOwnership}`);
+    if (kittenEnvironment) parts.push(`Kitten kept: ${kittenEnvironment}`);
+    if (otherPets) parts.push(`Other pets: ${otherPets}`);
+    if (housingExtra.trim()) parts.push(housingExtra.trim());
+    form.setValue('housingSituation', parts.join('. '), { shouldValidate: form.formState.isSubmitted });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homeOwnership, kittenEnvironment, otherPets, housingExtra]);
+
   async function handleUpload(file: File) {
     const response = await fetch('/api/upload-url', {
       method: 'POST',
@@ -111,6 +140,12 @@ function VerifyFundsForm() {
   }
 
   async function onSubmit(values: VerifyFundsForm) {
+    // Require all three housing answers (composed value alone can't enforce this).
+    if (!homeOwnership || !kittenEnvironment || !otherPets) {
+      form.setError('housingSituation', { message: 'Please answer the three questions about your home.' });
+      return;
+    }
+
     setUploadError(null);
     setSuccessMessage(null);
     setIsSaving(true);
@@ -339,10 +374,62 @@ function VerifyFundsForm() {
               <p className="mt-1 text-xs text-red-600">{form.formState.errors.monthlyBudget?.message}</p>
             </div>
             <div className="md:col-span-2">
-              <Label htmlFor="housingSituation">Describe your housing situation</Label>
-              <Textarea id="housingSituation" {...form.register('housingSituation')} placeholder="e.g. We live in a 2-bedroom house with a fenced yard. The kitten will be indoors, and we have one other cat." />
-              <p className="mt-1 text-xs text-slate-500">At least 20 characters — tell us about your home, whether it&apos;s indoor/outdoor, and any other pets.</p>
-              <p className="mt-1 text-xs text-red-600">{form.formState.errors.housingSituation?.message}</p>
+              <Label>About your home</Label>
+              <p className="mt-1 text-xs text-slate-500">A few quick questions so we know your kitten is going to a good fit.</p>
+              <div className="mt-3 grid gap-4 sm:grid-cols-3">
+                <div>
+                  <label htmlFor="homeOwnership" className="text-xs font-medium text-slate-600">Do you own or rent?</label>
+                  <select
+                    id="homeOwnership"
+                    value={homeOwnership}
+                    onChange={(e) => setHomeOwnership(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-royal-500 focus:ring-2 focus:ring-royal-100"
+                  >
+                    <option value="">Select…</option>
+                    <option value="I own my home">I own my home</option>
+                    <option value="I rent">I rent</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="kittenEnvironment" className="text-xs font-medium text-slate-600">Kitten will live…</label>
+                  <select
+                    id="kittenEnvironment"
+                    value={kittenEnvironment}
+                    onChange={(e) => setKittenEnvironment(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-royal-500 focus:ring-2 focus:ring-royal-100"
+                  >
+                    <option value="">Select…</option>
+                    <option value="Indoor only">Indoor only</option>
+                    <option value="Indoor with supervised outdoor access">Indoor + supervised outdoor</option>
+                    <option value="Indoor and outdoor">Indoor and outdoor</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="otherPets" className="text-xs font-medium text-slate-600">Other pets at home?</label>
+                  <select
+                    id="otherPets"
+                    value={otherPets}
+                    onChange={(e) => setOtherPets(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-royal-500 focus:ring-2 focus:ring-royal-100"
+                  >
+                    <option value="">Select…</option>
+                    <option value="No other pets">No other pets</option>
+                    <option value="Other cat(s)">Other cat(s)</option>
+                    <option value="Dog(s)">Dog(s)</option>
+                    <option value="Other pets">Other pets</option>
+                  </select>
+                </div>
+              </div>
+              <Textarea
+                className="mt-3"
+                value={housingExtra}
+                onChange={(e) => setHousingExtra(e.target.value)}
+                placeholder="Anything else about your home? (optional)"
+              />
+              <p className="mt-1 text-xs text-red-600">
+                {form.formState.errors.housingSituation ? 'Please answer the three questions about your home.' : ''}
+              </p>
             </div>
             <div className="md:col-span-2">
               <label className="flex items-center gap-3 text-sm font-medium text-slate-800">
