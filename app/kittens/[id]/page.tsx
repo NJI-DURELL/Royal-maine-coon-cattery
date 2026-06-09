@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { Badge } from '@/components/ui/Badge';
-import { kittenSchema, breadcrumbSchema, kittenAlt, JsonLd } from '@/lib/seo';
+import { kittenSchema, breadcrumbSchema, kittenAlt, JsonLd, siteConfig } from '@/lib/seo';
 
 const statusVariant: Record<string, 'success' | 'warning' | 'danger'> = {
   AVAILABLE: 'success',
@@ -104,7 +104,7 @@ export default async function KittenDetailPage({ params }: { params: { id: strin
           <Link href={`/verify-funds?kitten=${kitten.id}`} className="inline-flex w-full items-center justify-center rounded-full bg-royal-500 px-6 py-4 text-base font-semibold text-white transition hover:bg-royal-600">
             I'm interested in this kitten
           </Link>
-          <a href="mailto:breeder@royalmainecoon.com" className="text-center text-sm font-semibold text-royal-700 hover:text-royal-800">Contact breeder</a>
+          <a href={`mailto:${siteConfig.email}`} className="text-center text-sm font-semibold text-royal-700 hover:text-royal-800">Contact breeder</a>
           <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
             <h3 className="font-semibold text-slate-900">Kitten care</h3>
             <p className="mt-3 text-sm text-slate-600">Includes support for transport planning, diet guidance, and transition to your home.</p>

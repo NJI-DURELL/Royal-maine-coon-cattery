@@ -20,6 +20,9 @@ export default function ContactPage() {
         <p className="text-slate-700">
           Email: <a href={`mailto:${siteConfig.email}`} className="font-semibold text-royal-700 hover:text-royal-800">{siteConfig.email}</a>
         </p>
+        <p className="text-slate-700">
+          Phone: <a href={siteConfig.phoneHref} className="font-semibold text-royal-700 hover:text-royal-800">{siteConfig.phone}</a>
+        </p>
         <p className="text-sm text-slate-600">
           Ready to adopt? The fastest path is to{' '}
           <Link href="/verify-funds" className="font-semibold text-royal-700 hover:text-royal-800">start your application</Link>{' '}

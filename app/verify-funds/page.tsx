@@ -34,6 +34,7 @@ function VerifyFundsForm() {
 
   const form = useForm<VerifyFundsForm>({
     resolver: zodResolver(verifyFundsSchema),
+    mode: 'onTouched',
     defaultValues: {
       fullName: '',
       email: '',
@@ -110,9 +111,23 @@ function VerifyFundsForm() {
   return (
     <section className="space-y-10 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-soft">
       <div className="space-y-3">
-        <p className="text-sm uppercase tracking-[0.3em] text-royal-700">Fund verification</p>
-        <h1 className="text-3xl font-semibold text-slate-900">Submit proof of funds to schedule a video call</h1>
-        <p className="max-w-3xl text-slate-600">Complete the buyer verification workflow to qualify for kitten reservations, video tours, and breeder support.</p>
+        <p className="text-sm uppercase tracking-[0.3em] text-royal-700">Step 1 of adoption</p>
+        <h1 className="font-display text-3xl font-semibold text-slate-900">Apply to adopt</h1>
+        <p className="max-w-3xl text-slate-600">
+          A few quick details so we can confirm you&apos;re ready, reserve your kitten, and book your private video
+          call. Takes about 3 minutes — your information stays private.
+        </p>
+      </div>
+
+      {/* What you'll need */}
+      <div className="rounded-[1.5rem] border border-royal-200 bg-royal-50/60 p-6">
+        <h2 className="text-base font-semibold text-slate-900">What you&apos;ll need</h2>
+        <ul className="mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
+          <li className="flex gap-2"><span className="text-royal-600">✓</span> A proof-of-funds file — bank statement, screenshot, or money-order photo</li>
+          <li className="flex gap-2"><span className="text-royal-600">✓</span> At least <strong>&nbsp;$500</strong>&nbsp;available for the kitten + first-year care</li>
+          <li className="flex gap-2"><span className="text-royal-600">✓</span> Your contact details and delivery city</li>
+          <li className="flex gap-2"><span className="text-royal-600">✓</span> A few quick agreements at the end</li>
+        </ul>
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -134,7 +149,8 @@ function VerifyFundsForm() {
             </div>
             <div>
               <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" {...form.register('phone')} />
+              <Input id="phone" type="tel" placeholder="+1 (555) 123-4567" {...form.register('phone')} />
+              <p className="mt-1 text-xs text-slate-500">Include your country code.</p>
               <p className="mt-1 text-xs text-red-600">{form.formState.errors.phone?.message}</p>
             </div>
             <div>
@@ -161,8 +177,9 @@ function VerifyFundsForm() {
               <p className="mt-1 text-xs text-red-600">{form.formState.errors.kittenIds?.message}</p>
             </div>
             <div>
-              <Label htmlFor="proofDescription">Alternative proof description</Label>
-              <Textarea id="proofDescription" {...form.register('proofDescription')} placeholder="Describe your funding source if you are not uploading a file." />
+              <Label htmlFor="proofDescription">Funding note (optional)</Label>
+              <Textarea id="proofDescription" {...form.register('proofDescription')} placeholder="Only if you're not uploading a file — briefly describe your funding source." />
+              <p className="mt-1 text-xs text-slate-500">Optional. A note can&apos;t replace the document if a file is required.</p>
             </div>
           </div>
         </div>
@@ -183,8 +200,9 @@ function VerifyFundsForm() {
               <p className="mt-2 text-xs text-slate-600">Acceptable: bank statement, screenshot, money order photo. Max 10MB.</p>
             </div>
             <div>
-              <Label htmlFor="proofAmount">Total amount available for kitten + care</Label>
-              <Input id="proofAmount" type="number" step="50" {...form.register('proofAmount', { valueAsNumber: true })} />
+              <Label htmlFor="proofAmount">Total amount available for kitten + care (USD)</Label>
+              <Input id="proofAmount" type="number" min={500} step="50" placeholder="e.g. 2500" {...form.register('proofAmount', { valueAsNumber: true })} />
+              <p className="mt-1 text-xs text-slate-500">Minimum $500 — the price of the kitten plus first-year care.</p>
               <p className="mt-1 text-xs text-red-600">{form.formState.errors.proofAmount?.message}</p>
             </div>
           </div>
@@ -223,13 +241,15 @@ function VerifyFundsForm() {
               <p className="text-xs text-slate-600">Veterinary support is required for long-term kitten health.</p>
             </div>
             <div>
-              <Label htmlFor="monthlyBudget">Monthly budget for food/healthcare</Label>
-              <Input id="monthlyBudget" type="number" step="10" {...form.register('monthlyBudget', { valueAsNumber: true })} />
+              <Label htmlFor="monthlyBudget">Monthly budget for food/healthcare (USD)</Label>
+              <Input id="monthlyBudget" type="number" min={50} step="10" placeholder="e.g. 100" {...form.register('monthlyBudget', { valueAsNumber: true })} />
+              <p className="mt-1 text-xs text-slate-500">At least $50 per month.</p>
               <p className="mt-1 text-xs text-red-600">{form.formState.errors.monthlyBudget?.message}</p>
             </div>
             <div className="md:col-span-2">
               <Label htmlFor="housingSituation">Describe your housing situation</Label>
-              <Textarea id="housingSituation" {...form.register('housingSituation')} placeholder="Indoor/outdoor, family approval, home environment, etc." />
+              <Textarea id="housingSituation" {...form.register('housingSituation')} placeholder="e.g. We live in a 2-bedroom house with a fenced yard. The kitten will be indoors, and we have one other cat." />
+              <p className="mt-1 text-xs text-slate-500">At least 20 characters — tell us about your home, whether it&apos;s indoor/outdoor, and any other pets.</p>
               <p className="mt-1 text-xs text-red-600">{form.formState.errors.housingSituation?.message}</p>
             </div>
             <div className="md:col-span-2">

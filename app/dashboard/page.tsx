@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { getSupabaseServer } from '@/lib/auth';
 import { Badge } from '@/components/ui/Badge';
+import { siteConfig } from '@/lib/seo';
 
 const getBuyer = async () => {
   try {
@@ -57,8 +58,8 @@ export default async function DashboardPage() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <div className="rounded-3xl bg-emerald-50 p-6">
             <p className="text-sm uppercase tracking-[0.3em] text-emerald-700">Contact Breeder</p>
-            <p className="mt-3 text-lg font-semibold text-slate-900">Phone: <a href="tel:+18001234567" className="text-royal-700">+1 (800) 123-4567</a></p>
-            <p className="text-sm text-slate-600">Email: <a href="mailto:breeder@royalmainecoon.com" className="text-royal-700">breeder@royalmainecoon.com</a></p>
+            <p className="mt-3 text-lg font-semibold text-slate-900">Phone: <a href={siteConfig.phoneHref} className="text-royal-700">{siteConfig.phone}</a></p>
+            <p className="text-sm text-slate-600">Email: <a href={`mailto:${siteConfig.email}`} className="text-royal-700">{siteConfig.email}</a></p>
           </div>
           <div className="rounded-3xl bg-slate-50 p-6">
             <p className="text-sm uppercase tracking-[0.3em] text-royal-700">Next step</p>

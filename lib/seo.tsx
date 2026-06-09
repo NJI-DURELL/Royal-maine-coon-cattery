@@ -16,6 +16,8 @@ export const siteConfig = {
   description:
     'Licensed Maine Coon cattery raising purebred, health-tested kittens. Pedigree documentation, vaccinations, and microchipping included. Apply to adopt and schedule a private video viewing.',
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'royal.maine.coon.catt@gmail.com',
+  phone: '+1 (541) 550-8953',
+  phoneHref: 'tel:+15415508953',
   ogImage: '/opengraph-image',
   socials: {
     facebook: 'https://www.facebook.com/profile.php?id=61578433262779',
@@ -38,6 +40,7 @@ export const organizationSchema = () => ({
   url: siteConfig.url,
   description: siteConfig.description,
   email: siteConfig.email,
+  telephone: siteConfig.phone,
   image: absoluteUrl(siteConfig.ogImage),
   logo: absoluteUrl('/favicon.ico'),
   // Links the brand entity to its official profiles (helps Google's knowledge panel).

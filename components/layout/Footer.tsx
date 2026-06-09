@@ -45,6 +45,7 @@ export function Footer() {
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-royal-300">Get in touch</p>
             <a href={`mailto:${siteConfig.email}`} className="block text-sm hover:text-royal-300">{siteConfig.email}</a>
+            <a href={siteConfig.phoneHref} className="block text-sm hover:text-royal-300">{siteConfig.phone}</a>
             <div className="flex items-center gap-3 pt-1">
               <a
                 href={siteConfig.socials.facebook}
